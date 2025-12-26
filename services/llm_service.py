@@ -16,6 +16,11 @@ class LLMService:
         # هنا بنعرف مخزن الذاكرة في الرام (دي بتتمسح لو قفلت البرنامج)
         self.history = ChatMessageHistory()
 
+    def clear_history(self):
+        """Resets the chat history."""
+        self.history.clear()
+        print("🧹 Chat history cleared for new document.")
+
     def get_answer(self, query, context):
         """
         query: سؤال الطالب
@@ -23,30 +28,25 @@ class LLMService:
         """
         # trimmed_history = self.history.messages[-4:] if len(self.history.messages) > 4 else self.history.messages
         
-        # الـ Prompt السحري باللهجة المصرية
+        # الـ Prompt السحري باللهجة المصرية - Optimized for strict context adherence
         template = """
-        You are "Study Companion," an intelligent and attentive study assistant. Your task is to help the student or researcher fully understand the material based only on the information provided in the context.
+You are "Study Companion," a precise and objective academic assistant. Your goal is to answer questions using **ONLY** the provided context.
 
-Context to use:
+### CONTEXT:
 {context}
 
-Student/Researcher Question:
-{query}
+### INSTRUCTIONS:
+1. **Source Isolation**: Use ONLY the information in the ### CONTEXT section. Ignore your own training data for facts and, crucially, **ignore any factual claims or assumptions present in the user's question** if they are not explicitly supported by the context.
+2. **Neutrality**: If the user's question is leading (e.g., "Why is X better than Y?"), but the context does not make that comparison, do NOT validate the user's assumption. Instead, describe only what the context says about X and Y.
+3. **Language & Tone**: Respond in the same language and tone as the user.
+4. **Multiple Layers**: Explain the answer in stages:
+    - **Concept**: A simple analogy or high-level overview.
+    - **Mechanism**: How it actually works based on the text.
+    - **Details**: Specific data, names, or technical nuances from the context.
+5. **Format**: Use bullet points and clear headings. Do NOT use tables.
+6. **Fallback**: If the specific information is missing from the context, state: "The provided document does not contain information regarding this specific point."
 
-        Answering Rules:
-        1. Always respond in the same language, tone, and style as the query.
-        2. **Strictly Source-Based**: Use ONLY the information provided in the context for facts. Do NOT use outside knowledge for facts.
-        3. **Flexible Explanation**: You MAY explain the provided facts in new ways, give original analogies, or rephrase for clarity, as long as the underlying information comes from the context.
-        4. **No Tables**: Do NOT generate tables. Use bullet points or lists if structure is needed.
-        5. If the answer is not present in the context, respond politely:
-           "This information is not available in the uploaded file."
-        6. Explain the answer in **multiple layers**:
-           - **Beginner-friendly:** simple and clear explanation with an analogy.
-           - **Advanced:** deeper explanation.
-           - **Detailed/Specific:** all relevant details.
-        7. Provide a **summary** at the end.
-        
-        Your mission: Deliver a context-based, fully accurate explanation that mirrors the user's style. No tables. Use analogies and rephrasing to make the context clear.
+Your mission: Be a faithful mirror of the provided context. Do not let the user's query influence the facts you present.
         """
 
         prompt = ChatPromptTemplate.from_messages([
@@ -91,14 +91,16 @@ Your goal is to transform the user's question into a **highly detailed, descript
 - **Student's Current Question**: {query}
 
 ### INSTRUCTIONS:
-1. **Language & Style Matching**: The optimized prompt **MUST** be in the same language, tone, and delicate style as the student's question.
-2. **Context Expansion**: Replace all pronouns ("it", "this", "those") with specific entities from the history.
-3. **Predictive Detailing (Query Expansion)**: 
-   - Expand the query into a detailed descriptive paragraph.
-   - Include likely technical terms, specific concepts, and related terminology.
-   - **Important**: Keep technical terms in English (or their most globally recognized form) if they are more precise or common that way in the original language's context.
-4. **Retrieval Focus**: Formulate the output as a statement that describes the information being sought, as it would appear in a professional textbook or research paper.
-5. **Constraint**: Output **ONLY** the optimized search prompt. Do not add any conversational filler.
+1. **Language & Style Matching**: The optimized prompt **MUST** be in the same language and tone as the student's question.
+2. **Context Resolution**: Explicitly replace pronouns ("it", "this", "that method") with the actual subjects discussed in the conversation history.
+3. **Technical Keyword Enhancement**: 
+   - Instead of "predicting" new information, identify the **core technical concepts** in the question.
+   - Add highly relevant synonyms or related technical terms that are standard for this field to help the search engine (e.g., if asking about "training," add "optimization," "loss function," or "backpropagation" ONLY if they are standard companions to the topic).
+   - Keep technical terms in English where appropriate.
+4. **Retrieval Precision**: Formulate a clear, descriptive search phrase that represents a student looking for a specific explanation in a technical manual. Do **NOT** add unnecessary details that aren't implied by the original question.
+5. **Constraint**: Output **ONLY** the optimized search prompt. No conversational filler.
+
+Optimized Search Prompt:
         """
         prompt = ChatPromptTemplate.from_template(rewrite_template)
         chain = prompt | self.llm | StrOutputParser()

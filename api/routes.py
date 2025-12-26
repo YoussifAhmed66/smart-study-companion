@@ -90,6 +90,9 @@ async def upload_pdf(file: UploadFile = File(...)):
     # Create vector database
     vector_store.create_db(chunks)
 
+    # Reset chat history for the new document
+    get_llm_service().clear_history()
+
     return UploadResponse(
         message="PDF uploaded and processed successfully.",
         filename=file.filename,

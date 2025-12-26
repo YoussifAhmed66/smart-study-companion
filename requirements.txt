@@ -5,12 +5,13 @@ langchain-huggingface
 langchain-chroma
 langchain_experimental
 sentence-transformers
+langchain-openai
 pypdf
 chromadb
 python-dotenv
 unstructured[pdf]
 pymupdf
-langchain-openai
 fastapi
 uvicorn[standard]
 python-multipart
+rank-bm25
