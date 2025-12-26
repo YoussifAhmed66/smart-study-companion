@@ -1,0 +1,16 @@
+langchain
+langchain-groq
+langchain-community
+langchain-huggingface
+langchain-chroma
+langchain_experimental
+sentence-transformers
+pypdf
+chromadb
+python-dotenv
+unstructured[pdf]
+pymupdf
+langchain-openai
+fastapi
+uvicorn[standard]
+python-multipart
